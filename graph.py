@@ -109,6 +109,7 @@ tuesdays = combined[combined.index.weekday == 1]
 
 tuesday_totals = tuesdays["Total"]
 tuesday_diff = tuesday_totals.diff()
+tuesday_days = tuesday_totals.index.to_series().diff().dt.days
 
 # ----------------------------
 # 10. PLOT (INTERACTIVE)
@@ -120,28 +121,32 @@ fig.add_trace(go.Scatter(
     x=combined.index,
     y=combined.get("rs"),
     mode="lines",
-    name="Regular Share"
+    name="Regular Share",
+    line=dict(width=2, color="blue")
 ))
 
 fig.add_trace(go.Scatter(
     x=combined.index,
     y=combined.get("cs"),
     mode="lines",
-    name="Checking Share"
+    name="Checking Share",
+    line=dict(width=2, color="gold")
 ))
 
 fig.add_trace(go.Scatter(
     x=combined.index,
     y=combined.get("mm"),
     mode="lines",
-    name="Money Market"
+    name="Money Market",
+    line=dict(width=2, color="green")
 ))
 
 fig.add_trace(go.Scatter(
     x=combined.index,
     y=combined["Visa Loan"],
     mode="lines",
-    name="Visa Loan"
+    name="Visa Loan",
+    line=dict(width=2, color="red")
 ))
 
 fig.add_trace(go.Scatter(
@@ -149,7 +154,7 @@ fig.add_trace(go.Scatter(
     y=combined["Total"],
     mode="lines",
     name="Total",
-    line=dict(width=3, color="black")
+    line=dict(width=4, color="black")
 ))
 
 # ----------------------------
@@ -166,13 +171,30 @@ for t in tuesdays.index:
 # ----------------------------
 # 12. ANNOTATE PAYCHECK DIFFERENCES
 # ----------------------------
+y_top = combined["Total"].max()
+y_offset = (combined["Total"].max() - combined["Total"].min()) * 0.04
+
 for i in range(1, len(tuesday_totals)):
     date = tuesday_totals.index[i]
     diff = tuesday_diff.iloc[i]
+    days = int(tuesday_days.iloc[i])
 
+    # Days since previous Tuesday
     fig.add_annotation(
         x=date,
-        y=combined["Total"].max(),
+        y=y_top + y_offset,
+        text=f"{days} days",
+        showarrow=False,
+        font=dict(
+            size=11,
+            color="gray"
+        )
+    )
+
+    # Money gained/lost
+    fig.add_annotation(
+        x=date,
+        y=y_top,
         text=f"{diff:+.2f}",
         showarrow=False,
         font=dict(

@@ -78,6 +78,28 @@ MM 1-24 to 6-24.csv
 VL 1-24 to 6-24.csv
 ```
 
+## CSV Format Requirements
+
+The importer expects each CSV file to contain a specific set of column headers based on the account type. Files that do not match these formats may fail to import correctly.
+
+### Regular Share (`RS`), Checking Share (`CS`), and Money Market (`MM`)
+
+CSV files whose filenames begin with `RS`, `CS`, or `MM` **must** contain the following columns:
+
+```text
+Date,Transaction Description,Amount,Balance,Check/Misc.,Note,Category
+```
+
+### Visa Loan / Credit Card (`VL`)
+
+CSV files whose filenames begin with `VL` **must** contain the following columns:
+
+```text
+Date,Transaction Description,Principal,Interest,Fees,Balance,Check/Misc.,Note,Category
+```
+
+These column names are required by the importer and should not be renamed or removed.
+
 ## CSV Parsing Notes
 
 Some transaction descriptions include commas in company names. Since commas are also used as CSV separators, these entries can cause parsing errors.
@@ -89,7 +111,7 @@ The importer includes logic to identify these problematic descriptions, repair t
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/Bank-Analyst.git
+git clone https://github.com/JustinKerr401/Bank-Analyst.git
 cd Bank-Analyst
 ```
 
@@ -137,9 +159,9 @@ Create an `assets/` folder in the project directory if it does not already exist
 ```text
 Bank-Analyst/
 ├── assets/
-│   ├── CS 1-24 to 6-24.csv
-│   ├── MM 1-24 to 6-24.csv
-│   └── VL 1-24 to 6-24.csv
+│   ├── CS 1-1 to 6-1.csv
+│   ├── MM 1-1 to 6-1.csv
+│   └── VL 1-1 to 6-1.csv
 ├── .env
 ├── requirements.txt
 └── ...
@@ -147,15 +169,11 @@ Bank-Analyst/
 
 ### 6. Run the project
 
-Run the appropriate scripts to create tables, process CSV files, and display the account graphs.
+Either run the bat file in File explorer or the terminal
 
 ```bash
-python create_table.py
-python process_csv.py
-python graph.py
+.\run.bat
 ```
-
-> Script names may vary depending on the current project structure.
 
 ## Requirements
 
