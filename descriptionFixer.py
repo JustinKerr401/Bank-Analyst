@@ -16,7 +16,6 @@ cursor = conn.cursor()
 
 def fixCSV(file_path, faultydescriptions, file):
     
-    fixedDescriptions = []
     temp_file = file_path.with_suffix(".tmp")
 
     with open(file_path, "r", newline="", encoding="utf-8-sig") as infile, \
@@ -27,8 +26,7 @@ def fixCSV(file_path, faultydescriptions, file):
                 toFix = description + ",,"
                 if toFix in line:
                     line = line.replace(toFix, description+",")
-                    if description not in fixedDescriptions:
-                        fixedDescriptions.append(description)
+                    print(f"Fixed {toFix}")
 
             outfile.write(line)
 

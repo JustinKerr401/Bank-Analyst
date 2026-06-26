@@ -62,9 +62,10 @@ def create_tables():
 
     conn.commit()
 
+    # Note files that have been fixed
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS fixedfiles (
-        filename VARCHAR(25) PRIMARY KEY
+        filename VARCHAR(31) PRIMARY KEY
     )
     """)
 

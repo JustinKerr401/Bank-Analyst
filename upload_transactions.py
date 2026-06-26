@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
 from descriptionFixer import fixCSV
-from create_table import create_tables
+from create_tables import create_tables
 
 load_dotenv()
 create_tables()
@@ -43,7 +43,8 @@ for file in files:
     faultydescriptions = {row[0] for row in cursor.fetchall()}
     cursor.execute("SELECT * FROM fixedfiles")
     fixedfiles = {row[0] for row in cursor.fetchall()}
-    if file not in fixedfiles:
+    # Fix a file if the current one hasn't been fixed AND there is something to fix
+    if file not in fixedfiles and not faultydescriptions == set():
         fixCSV(folder / file, faultydescriptions, file)
 
     # Read the file

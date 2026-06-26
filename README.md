@@ -72,11 +72,16 @@ indicates that it contains Checking Share account activity from January 2024 thr
 Example filenames:
 
 ```text
-RS 1-24 to 6-24.csv
-CS 1-24 to 6-24.csv
-MM 1-24 to 6-24.csv
-VL 1-24 to 6-24.csv
+RS.csv
+CS 1-1 to 6-1.csv
+MM January through June.csv
+VL 2026 H1.csv
 ```
+
+### File name restrictions
+
+The file name must not exceed 31 characters. 
+This would mean that the filename "VL 8-23-25 through 1-23-26.csv" works. Because it contains 31 characters, this format depicts the maximum length.
 
 ## CSV Format Requirements
 
@@ -169,7 +174,7 @@ Bank-Analyst/
 
 ### 6. Run the project
 
-Either run the bat file in File explorer or the terminal
+Either run the bat file in File explorer or the terminal.
 
 ```bash
 .\run.bat
