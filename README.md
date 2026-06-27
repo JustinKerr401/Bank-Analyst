@@ -6,26 +6,32 @@ The project was built to make personal financial activity easier to understand. 
 
 ## Overview
 
-Bank Analyst processes exported CSV files from a bank, stores the transaction data in MySQL, and generates descriptive visualizations for:
+Bank Analyst is a personal finance analytics tool that imports bank transaction history from CSV files, stores the data in a MySQL database, and provides interactive dashboards for analyzing both account balances and spending habits.
 
-* Regular Share account balances
-* Checking Share account balances
-* Money Market account balances
-* Visa Loan / credit card balances
-* Total net worth across all tracked accounts
+Instead of manually reviewing bank statements, Bank Analyst consolidates financial data from multiple accounts into a single database and generates visual reports that make it easier to understand long-term financial trends, monitor net worth, and identify where money is being spent.
 
-The resulting graphs make it easier to identify how account balances change over time and provide a clearer picture of overall financial progress.
+Current dashboards include:
+
+- Net worth and account balance visualization
+- Expense analysis over customizable date ranges
+- Spending by category
+- Top merchants
+- Largest individual purchases
 
 ## Features
 
 * Imports transaction history from bank-provided CSV files
 * Supports multiple account types through filename prefixes
 * Stores processed transactions in a MySQL database
-* Avoids inserting duplicate transactions already stored in the database
-* Allows CSV files to remain in the project for future reference
+* Prevents duplicate transaction imports
 * Handles malformed CSV rows caused by company names containing commas
-* Corrects future occurrences of known problematic company names during processing
-* Visualizes account balances and total net worth over time
+* Automatically corrects known malformed merchant names during future imports
+* Interactive Plotly dashboard for tracking net worth over time
+* Interactive expense analysis dashboard with customizable date ranges
+* Displays spending by category
+* Displays highest-spending merchants
+* Displays largest individual purchases
+* Excludes internal account transfers from spending analytics
 * Uses environment variables to keep database credentials out of source code
 
 ## Tech Stack
@@ -33,12 +39,12 @@ The resulting graphs make it easier to identify how account balances change over
 * Python
 * MySQL
 * Pandas
-* Matplotlib
 * Plotly
 * SQLAlchemy
 * PyMySQL
-* `mysql-connector-python`
-* `python-dotenv`
+* mysql-connector-python
+* python-dotenv
+* Tkinter
 
 ChatGPT was used as a development aid to help research concepts, troubleshoot issues, and fill in implementation gaps throughout the project.
 
@@ -48,17 +54,54 @@ ChatGPT was used as a development aid to help research concepts, troubleshoot is
 2. Place the files in the `assets/` directory in the project root.
 3. Ensure each filename begins with the correct account abbreviation.
 4. Run the processing script to import new transactions into MySQL.
-5. Run the graphing application to view account history and net-worth trends.
+5. Launches:
+   - **Net Worth Dashboard** to visualize account balances and overall net worth over time.
+   - **Expense Dashboard** to analyze spending within a selected date range.
+
+The Expense Dashboard allows users to choose any start and end dates before generating an interactive spending report that includes:
+
+- Spending by category
+- Top merchants
+- Largest purchases
+- Interactive charts with hover information, zooming, and export support
+
+## Dashboards
+
+### Net Worth Dashboard
+
+Displays historical balances for:
+
+- Regular Share
+- Checking Share
+- Money Market
+- Visa Loan
+- Total Net Worth
+
+Features include:
+
+- Interactive Plotly graphs
+- Hover tooltips
+- Zooming and panning
+- Range slider
+- Quick date selection buttons
+
+---
+
+### Expense Dashboard
+
+Allows the user to select a custom date range before generating an interactive expense report.
+
+The dashboard includes:
+
+- Spending by category (pie chart)
+- Top merchants (horizontal bar chart)
+- Largest individual purchases (interactive table)
+
+Internal transfers such as loan payments and transfers between personal accounts are automatically excluded so that spending reports reflect actual purchases.
+
+### Duplication safety
 
 The importer checks whether transactions are already stored before inserting them. This means CSV files can remain in the `assets/` folder indefinitely without creating duplicate database entries.
-
-For example, a file named:
-
-```text
-CS 1-24 to 6-24.csv
-```
-
-indicates that it contains Checking Share account activity from January 2024 through June 2024.
 
 ## Supported Account Prefixes
 
@@ -210,11 +253,8 @@ tzdata==2026.2
 
 ## Planned Improvements
 
-* Display the most common expenses by month, average spending, category, and company
 * Allow users to assign categories to transactions marked as `Uncategorized`
-* Allow users to select an existing category or create a new category for a company
-* Containerize the application with Docker to improve portability and simplify setup
-* Continue improving graph controls and financial-statistics displays
+* Docker Containerization
 
 ## Privacy and Security
 
