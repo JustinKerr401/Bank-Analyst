@@ -1,7 +1,5 @@
 # To Do
 
-1. Most common expenses per month / on average, by category and/or company
+1. Assign categories to companies listed as "Uncategorized"
 
-2. Assign categories to companies listed as "Uncategorized"
-
-3. Containerize (likely docker)
+2. Containerize (likely docker)
