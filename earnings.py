@@ -33,7 +33,7 @@ def get_date_range():
     result = {}
 
     root = tk.Tk()
-    root.title("Bank Analyst - Expense Analysis")
+    root.title("Bank Analyst - Income Analysis")
     root.geometry("350x240")
     root.resizable(False, False)
 
@@ -42,7 +42,7 @@ def get_date_range():
 
     ttk.Label(
         frame,
-        text="Expense Analysis",
+        text="Income Analysis",
         font=("Segoe UI", 14, "bold")
     ).pack(pady=(0, 10))
 
@@ -92,38 +92,18 @@ def get_date_range():
 # SQL QUERIES
 # -------------------------------------------------
 
-ACCOUNTSFILTER = """
-amount < 0
-AND date BETWEEN %s AND %s
-
-AND description NOT LIKE 'Transfer to%%'
-AND description NOT LIKE 'Transfer from%%'
-"""
-
-LOANSFILTER = """
+INCOME_FILTER = """
 amount > 0
 AND date BETWEEN %s AND %s
-
-AND description NOT LIKE 'Transfer to%%'
 AND description NOT LIKE 'Transfer from%%'
-AND description NOT LIKE 'Member-to-Member%%'
 """
 
 CATEGORY_QUERY = f"""
 SELECT
     COALESCE(NULLIF(category,''),'Uncategorized') AS category,
-    SUM(ABS(amount)) AS total
-FROM (
-    SELECT date, description, amount, category
-    FROM accounts
-    WHERE {ACCOUNTSFILTER}
-
-    UNION ALL
-
-    SELECT date, description, -amount AS amount, category
-    FROM loans
-    WHERE {LOANSFILTER}
-) t
+    SUM(amount) AS total
+FROM accounts
+WHERE {INCOME_FILTER}
 GROUP BY category
 ORDER BY total DESC;
 """
@@ -131,41 +111,23 @@ ORDER BY total DESC;
 MERCHANT_QUERY = f"""
 SELECT
     description,
-    SUM(ABS(amount)) AS total
-FROM (
-    SELECT date, description, amount, category
-    FROM accounts
-    WHERE {ACCOUNTSFILTER}
-
-    UNION ALL
-
-    SELECT date, description, -amount AS amount, category
-    FROM loans
-    WHERE {LOANSFILTER}
-) t
+    SUM(amount) AS total
+FROM accounts
+WHERE {INCOME_FILTER}
 GROUP BY description
 ORDER BY total DESC
 LIMIT 15;
 """
 
-EXPENSE_QUERY = f"""
+INCOME_QUERY = f"""
 SELECT
     date,
     description,
     category,
     amount
-FROM (
-    SELECT date, description, amount, category
-    FROM accounts
-    WHERE {ACCOUNTSFILTER}
-
-    UNION ALL
-
-    SELECT date, description, -amount AS amount, category
-    FROM loans
-    WHERE {LOANSFILTER}
-) t
-ORDER BY amount ASC
+FROM accounts
+WHERE {INCOME_FILTER}
+ORDER BY amount DESC
 LIMIT 20;
 """
 
@@ -179,7 +141,6 @@ def load_dataframe(connection, query, start_date, end_date):
         query,
         connection,
         params=(
-            start_date, end_date,
             start_date, end_date
         )
     )
@@ -216,9 +177,9 @@ def load_analysis(start_date, end_date):
             end_date
         )
 
-        expenses = load_dataframe(
+        income = load_dataframe(
             conn,
-            EXPENSE_QUERY,
+            INCOME_QUERY,
             start_date,
             end_date
         )
@@ -231,14 +192,14 @@ def load_analysis(start_date, end_date):
     # -------------------------
 
     merchants["description"] = merchants["description"].apply(clean_merchant)
-    expenses["description"] = expenses["description"].apply(clean_merchant)
+    income["description"] = income["description"].apply(clean_merchant)
 
     # -------------------------
     # Format dates
     # -------------------------
 
-    expenses["date"] = pd.to_datetime(
-        expenses["date"]
+    income["date"] = pd.to_datetime(
+        income["date"]
     ).dt.strftime("%Y-%m-%d")
 
     # -------------------------
@@ -247,16 +208,16 @@ def load_analysis(start_date, end_date):
 
     categories["total"] = categories["total"].round(2)
     merchants["total"] = merchants["total"].round(2)
-    expenses["amount"] = expenses["amount"].round(2)
+    income["amount"] = income["amount"].round(2)
 
-    return categories, merchants, expenses
+    return categories, merchants, income
 
 
 # -------------------------------------------------
 # BUILD TABLE
 # -------------------------------------------------
 
-def build_table(expenses):
+def build_table(income):
 
     return go.Table(
 
@@ -266,7 +227,7 @@ def build_table(expenses):
                 "<b>Date</b>",
                 "<b>Merchant</b>",
                 "<b>Category</b>",
-                "<b>Amount</b>"
+                "<b>Income</b>"
             ],
 
             align="left",
@@ -279,10 +240,10 @@ def build_table(expenses):
 
             values=[
 
-                expenses["date"],
-                expenses["description"],
-                expenses["category"],
-                expenses["amount"].map("${:,.2f}".format)
+                income["date"],
+                income["description"],
+                income["category"],
+                income["amount"].map("${:,.2f}".format)
 
             ],
 
@@ -300,57 +261,27 @@ def build_table(expenses):
 def build_dashboard(start_date, end_date,
                     categories,
                     merchants,
-                    expenses):
+                    income):
 
-    total_spent = categories["total"].sum()
+    total_income = categories["total"].sum()
 
     fig = make_subplots(
 
         rows=2,
-        cols=2,
+        cols=1,
 
         specs=[
-            [{"type": "domain"}, {"type": "xy"}],
-            [{"type": "table", "colspan": 2}, None]
+            [{"type": "xy"}],
+            [{"type": "table"}]
         ],
 
         subplot_titles=(
-
-            "Spending by Category",
-            "Top Merchants",
-            "Largest Individual Expenses"
-
+            "Top Categories (Income)",
+            "Top Merchants"
         ),
 
         vertical_spacing=0.12,
         horizontal_spacing=0.10
-    )
-
-    # ---------------------------------------
-    # PIE CHART
-    # ---------------------------------------
-
-    top_categories = categories.head(8)
-
-    fig.add_trace(
-
-        go.Pie(
-
-            labels=top_categories["category"],
-            values=top_categories["total"],
-
-            textinfo="label+percent",
-
-            hovertemplate=
-
-                "<b>%{label}</b><br>" +
-                "$%{value:,.2f}<extra></extra>"
-
-        ),
-
-        row=1,
-        col=1
-
     )
 
     # ---------------------------------------
@@ -383,7 +314,7 @@ def build_dashboard(start_date, end_date,
         ),
 
         row=1,
-        col=2
+        col=1
 
     )
 
@@ -394,7 +325,7 @@ def build_dashboard(start_date, end_date,
         autorange="reversed",
 
         row=1,
-        col=2
+        col=1
 
     )
 
@@ -404,7 +335,7 @@ def build_dashboard(start_date, end_date,
 
     fig.add_trace(
 
-        build_table(expenses),
+        build_table(income),
 
         row=2,
         col=1
@@ -421,9 +352,9 @@ def build_dashboard(start_date, end_date,
 
             # Header display
             text=(
-                f"<b>Expense Analysis</b>"
+                f"<b>Income Analysis</b>"
                 f"<br><sup>{start_date} → {end_date}</sup>"
-                f"<br><sup><b>Total Spent: ${total_spent:,.2f}</b></sup>"
+                f"<br><sup><b>Total Earned: ${total_income:,.2f}</b></sup>"
             ),
 
             x=0.5,
@@ -445,12 +376,12 @@ def build_dashboard(start_date, end_date,
 
     fig.update_xaxes(
 
-        title_text="Amount Spent ($)",
+        title_text="Income ($)",
 
         tickprefix="$",
 
         row=1,
-        col=2
+        col=1
 
     )
 
@@ -517,7 +448,7 @@ def main():
 
         start_date, end_date = get_date_range()
 
-        categories, merchants, expenses = load_analysis(
+        categories, merchants, income = load_analysis(
             start_date,
             end_date
         )
@@ -527,7 +458,7 @@ def main():
             end_date,
             categories,
             merchants,
-            expenses
+            income
         )
 
         fig.show()
@@ -538,7 +469,7 @@ def main():
     except Exception as e:
 
         messagebox.showerror(
-            "Expense Analysis",
+            "Income Analysis",
             str(e)
         )
 
