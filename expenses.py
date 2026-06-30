@@ -265,6 +265,8 @@ def build_dashboard(start_date, end_date,
                     merchants,
                     expenses):
 
+    total_spent = categories["total"].sum()
+
     fig = make_subplots(
 
         rows=2,
@@ -380,9 +382,11 @@ def build_dashboard(start_date, end_date,
 
         title=dict(
 
+            # Header display
             text=(
                 f"<b>Expense Analysis</b>"
                 f"<br><sup>{start_date} → {end_date}</sup>"
+                f"<br><sup><b>Total Spent: ${total_spent:,.2f}</b></sup>"
             ),
 
             x=0.5
