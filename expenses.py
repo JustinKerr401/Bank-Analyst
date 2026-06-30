@@ -92,8 +92,17 @@ def get_date_range():
 # SQL QUERIES
 # -------------------------------------------------
 
-FILTER = """
+ACCOUNTSFILTER = """
 amount < 0
+AND date BETWEEN %s AND %s
+
+AND description NOT LIKE 'Transfer to%%'
+AND description NOT LIKE 'Transfer from%%'
+AND description NOT LIKE 'Member-to-Member%%'
+"""
+
+LOANSFILTER = """
+amount > 0
 AND date BETWEEN %s AND %s
 
 AND description NOT LIKE 'Transfer to%%'
@@ -105,8 +114,17 @@ CATEGORY_QUERY = f"""
 SELECT
     COALESCE(NULLIF(category,''),'Uncategorized') AS category,
     SUM(ABS(amount)) AS total
-FROM accounts
-WHERE {FILTER}
+FROM (
+    SELECT date, description, amount, category
+    FROM accounts
+    WHERE {ACCOUNTSFILTER}
+
+    UNION ALL
+
+    SELECT date, description, -amount AS amount, category
+    FROM loans
+    WHERE {LOANSFILTER}
+) t
 GROUP BY category
 ORDER BY total DESC;
 """
@@ -115,8 +133,17 @@ MERCHANT_QUERY = f"""
 SELECT
     description,
     SUM(ABS(amount)) AS total
-FROM accounts
-WHERE {FILTER}
+FROM (
+    SELECT date, description, amount, category
+    FROM accounts
+    WHERE {ACCOUNTSFILTER}
+
+    UNION ALL
+
+    SELECT date, description, -amount AS amount, category
+    FROM loans
+    WHERE {LOANSFILTER}
+) t
 GROUP BY description
 ORDER BY total DESC
 LIMIT 15;
@@ -128,12 +155,20 @@ SELECT
     description,
     category,
     amount
-FROM accounts
-WHERE {FILTER}
+FROM (
+    SELECT date, description, amount, category
+    FROM accounts
+    WHERE {ACCOUNTSFILTER}
+
+    UNION ALL
+
+    SELECT date, description, -amount AS amount, category
+    FROM loans
+    WHERE {LOANSFILTER}
+) t
 ORDER BY amount ASC
 LIMIT 20;
 """
-
 
 # -------------------------------------------------
 # LOAD SQL INTO DATAFRAME
@@ -144,7 +179,10 @@ def load_dataframe(connection, query, start_date, end_date):
     df = pd.read_sql(
         query,
         connection,
-        params=(start_date, end_date)
+        params=(
+            start_date, end_date,
+            start_date, end_date
+        )
     )
 
     if "total" in df.columns:
