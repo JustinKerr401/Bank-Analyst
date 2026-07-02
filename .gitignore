@@ -1,4 +1,6 @@
 .env
+plan.md
+drop_tables.py
 assets/
 __pycache__/
 .vscode/
