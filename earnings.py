@@ -276,8 +276,8 @@ def build_dashboard(start_date, end_date,
         ],
 
         subplot_titles=(
-            "Top Categories (Income)",
-            "Top Merchants"
+            "Top Despoit Sources",
+            "Largest Individual Despoits"
         ),
 
         vertical_spacing=0.12,
